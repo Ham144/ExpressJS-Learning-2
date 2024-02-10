@@ -83,5 +83,17 @@ app.patch("/users/:id", (req,res) =>{
 })
 
 
+app.delete('/users', (req,res) => {
+    const {params : {id}} = req
+    const parsedId = parseInt(id)
+    if(isNaN(parsedId)) return res.status(402).send("ID must be A number")
+    const foundIndex = users.findIndex((user) => {
+        return user.id === parsedId
+     })
+    if(foundIndex === -1) return res.status(404).send("not Found bro") 
+    users.splice(foundIndex, 1)
+    res.status(202)
+})
+
 
 app.listen(Port, () => console.log(`============END=============`))

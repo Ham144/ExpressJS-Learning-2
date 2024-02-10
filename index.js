@@ -1,5 +1,5 @@
 import express from 'express'
-import { query } from 'express-validator'
+import { query, validationResult } from 'express-validator'
 
 const Port = process.env.PORT || 3000
 const app = express()
@@ -42,26 +42,33 @@ app.put('/users/:id', resolveUsersById, (req, res) => {
 })
 
 
-app.get('/users', (req, res) => {
-    const { filter, value } = req.query;
-    if (!filter && !value) return res.send(users)
-    if (filter && value) {
-        if (filter === "userName") {
-            return res.send(
-                users.filter((user) => {
-                    return user[filter].includes(value) //INGAT HARUS PAKAI RETURN UNTUK Fungsi array syarat/kriteria
-                })
-            )
+app.get('/users', query("filter")
+    .isString()
+    .withMessage("filter tidak boleh berupa angka")
+    .notEmpty()
+    .withMessage("filter tidak boleh kosong")
+    .isLength({ min: 3, max: 10 })
+    .withMessage("filter.length harus diantara 3-10"), (req, res) => {
+        console.log(validationResult(req))
+        const { filter, value } = req.query;
+        if (!filter && !value) return res.send(users)
+        if (filter && value) {
+            if (filter === "userName") {
+                return res.send(
+                    users.filter((user) => {
+                        return user[filter].includes(value) //INGAT HARUS PAKAI RETURN UNTUK Fungsi array syarat/kriteria
+                    })
+                )
+            }
+            else if (filter === "age") {
+                return res.send(
+                    users.filter((user) => {
+                        return user[filter] < value
+                    })
+                )
+            }
         }
-        else if (filter === "age") {
-            return res.send(
-                users.filter((user) => {
-                    return user[filter] < value
-                })
-            )
-        }
-    }
-})
+    })
 
 
 

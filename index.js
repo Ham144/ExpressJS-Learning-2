@@ -1,5 +1,6 @@
 import express from 'express'
-import { query, validationResult, body } from 'express-validator'
+import { createUserValidationSchema } from './utils/validationSchemas.js'
+import { query, validationResult, body, matchedData, checkSchema } from 'express-validator'
 
 const Port = process.env.PORT || 3000
 const app = express()
@@ -27,19 +28,15 @@ const resolveUsersById = (req, res, next) => {
 }
 
 
-app.post('/users', [body("userName")
-.notEmpty().withMessage("Username must not be empty")
-.isLength({ min: 5, max: 32 }).withMessage("username at least 5 to 32")
-.isString().withMessage("username should be string"), body("age").isEmpty()],
-    (req, res) => {
+app.post('/users', checkSchema(createUserValidationSchema), (req, res) => {
         const errResult = validationResult(req)
         console.log(errResult)
-        if (validationResult(req).errors.length > 0) return res.send(errResult)
-        const { body } = req
-        const newUser = { id: users[users.length - 1].id + 1, ...body }
+        if (!errResult.isEmpty()) return res.status(404).send({ error: errResult.array() })
+        const data = matchedData(req)
+        const newUser = { id: users[users.length - 1].id + 1, ...data }
         users.push(newUser)
         return res.status(201).send(newUser)
-    })
+})
 
 
 app.put('/users/:id', resolveUsersById, (req, res) => {

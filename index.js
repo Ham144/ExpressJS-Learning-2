@@ -1,5 +1,5 @@
 import express from 'express'
-import { query, validationResult } from 'express-validator'
+import { query, validationResult, body } from 'express-validator'
 
 const Port = process.env.PORT || 3000
 const app = express()
@@ -27,12 +27,19 @@ const resolveUsersById = (req, res, next) => {
 }
 
 
-app.post('/users', (req, res) => {
-    const { body } = req
-    const newUser = { id: users[users.length - 1].id + 1, ...body }
-    users.push(newUser)
-    return res.status(201).send(newUser)
-})
+app.post('/users', [body("userName")
+.notEmpty().withMessage("Username must not be empty")
+.isLength({ min: 5, max: 32 }).withMessage("username at least 5 to 32")
+.isString().withMessage("username should be string"), body("age").isEmpty()],
+    (req, res) => {
+        const errResult = validationResult(req)
+        console.log(errResult)
+        if (validationResult(req).errors.length > 0) return res.send(errResult)
+        const { body } = req
+        const newUser = { id: users[users.length - 1].id + 1, ...body }
+        users.push(newUser)
+        return res.status(201).send(newUser)
+    })
 
 
 app.put('/users/:id', resolveUsersById, (req, res) => {
@@ -48,8 +55,10 @@ app.get('/users', query("filter")
     .notEmpty()
     .withMessage("filter tidak boleh kosong")
     .isLength({ min: 3, max: 10 })
-    .withMessage("filter.length harus diantara 3-10"), (req, res) => {
-        console.log(validationResult(req))
+    .withMessage("filter.length harus diantara 3-10"),
+    (req, res) => {
+        const result = validationResult(req)
+        console.log(result)
         const { filter, value } = req.query;
         if (!filter && !value) return res.send(users)
         if (filter && value) {

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { query, validationResult, checkSchema, matchedData } from "express-validator";
 import { createUserValidationSchema } from "../utils/validationSchemas.js";
 import { users } from "../utils/constants.js";
+import { resolveUsersById } from "../utils/middleware.js";
+
 
 const router = Router()
 
@@ -33,7 +35,14 @@ router.get("/users", query("filter")
                 )
             }
         }
- })
+    })
+
+router.get("/users/:id", resolveUsersById, (req, res) => {
+    const { foundIndex } = req
+    const data = users[foundIndex]
+    if (!data) return res.status(404)
+    return res.send(data)
+})
 
 router.post('/users', checkSchema(createUserValidationSchema), (req, res) => {
     const errResult = validationResult(req)
@@ -44,6 +53,29 @@ router.post('/users', checkSchema(createUserValidationSchema), (req, res) => {
     users.push(newUser)
     return res.status(201).send(newUser)
 })
+
+
+router.put('/users/:id', resolveUsersById, (req, res) => {
+    const { body, foundIndex } = req;
+    users[foundIndex] = { id: users[foundIndex].id, ...body }
+    return res.status(200)
+})
+
+
+
+router.patch("/users/:id", resolveUsersById, (req, res) => {
+    const { foundIndex, body } = req
+    users[foundIndex] = { ...users[foundIndex], ...body }
+    return res.status(202).send(users)
+})
+
+
+router.delete('/users/:id', resolveUsersById, (req, res) => {
+    const { foundIndex } = req
+    users.splice(foundIndex, 1)
+    return res.status(202)
+})
+
 
 
 export default router

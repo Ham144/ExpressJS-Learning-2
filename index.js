@@ -17,6 +17,7 @@ app.use(session({
         maxAge: 60000 * 60
     }
 }))
+
 app.use(routes)
 
 app.get("/", (req, res) => {

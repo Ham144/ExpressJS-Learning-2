@@ -15,6 +15,15 @@ router.get("/users", query("filter")
     .isLength({ min: 3, max: 10 })
     .withMessage("filter.length harus diantara 3-10"),
     (req, res) => {
+        console.log(req.session)
+        console.log(req.session.id)
+        req.sessionStore.get(req.session.id, (err, sessionData) => {
+            if (err) {
+                console.log(err)
+                throw err
+            }
+            console.log(sessionData)
+        })
         const result = validationResult(req)
         console.log(result)
         const { filter, value } = req.query;

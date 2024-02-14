@@ -3,6 +3,8 @@ import routes from "./src/routes/index.js"
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
 import { users } from './src/utils/constants.js'
+import passport from 'passport'
+import "./src/strategy/local-strategy.js"
 
 const Port = process.env.PORT || 3000
 const app = express()
@@ -17,8 +19,20 @@ app.use(session({
         maxAge: 60000 * 60
     }
 }))
-
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(routes)
+
+app.post("/auth", passport.authenticate("local"), (req, res) => {
+    res.sendStatus(200)
+})
+
+app.get("/auth/status", (req, res) => {
+    console.log(`inside the auth/status`)
+    console.log(req.user)
+    console.log(req.session)
+    return req.user ? res.send(req.user) : res.sendStatus(401)
+})
 
 app.get("/", (req, res) => {
     console.log(req.session)

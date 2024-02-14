@@ -7,14 +7,16 @@ export const createUserValidationSchema = {
             },
             errorMessage: "username at least 5 to 32"
         },
-        notEmpty: {
-            errorMessage: "Username must not be empty"
-        },
         isString: {
             errorMessage: "username should be string"
         }
     },
+    password: {
+        notEmpty : {
+            errorMessage: "Password is required"
+        }
+    },
     age: {
-        notEmpty: true,
+        notEmpty: true
     }
 }

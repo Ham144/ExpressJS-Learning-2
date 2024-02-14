@@ -8,11 +8,11 @@ passport.serializeUser((user, done) => {
     done(null, user.userName)
 })
 
-passport.deserializeUser((userName, done) => {
+passport.deserializeUser(async (id, done) => {
     console.log('inside deserilize')
-    console.log(`deserilized id : ${userName}`)
+    console.log(`deserilized id : ${id}`)
     try {
-        const finduser = users.find((user) => user.userName === userName)
+        const finduser = await users.findById(id)
         if (!finduser) throw new Error("user not found")
         done(null, finduser)
     } catch (err) {
@@ -21,20 +21,17 @@ passport.deserializeUser((userName, done) => {
 })
 
 export default passport.use(
-    new Strategy((userName, password, done) => {
-        console.log(`userName : ${userName}`)
+    new Strategy(async (userName, password, done) => {
+        console.log(`userName: ${userName},`)
         console.log(`password : ${password}`)
         try {
-            const finduser = users.find((user) => {
-                return user.userName === userName
-            })
-            if (!finduser) throw new Error("users not found")
-            if (finduser.password !== password) throw new Error("invalid credentials")
+            const finduser = await users.findOne((user) => { userName })
+            if (!finduser) throw new Error("User not found")
+            if (finduser.password !== password) throw new Error("password is wrong")
             done(null, finduser)
-        } catch (err) {
+        } catch (error) {
             done(err, null)
         }
-
     })
 )
 

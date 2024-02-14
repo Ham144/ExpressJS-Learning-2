@@ -3,7 +3,7 @@ import { query, validationResult, checkSchema, matchedData } from "express-valid
 import { createUserValidationSchema } from "../utils/validationSchemas.js";
 import { users } from "../utils/constants.js";
 import { resolveUsersById } from "../utils/middleware.js";
-
+import { User } from "../mongoose/schemas/user.js";
 
 const router = Router()
 
@@ -40,11 +40,11 @@ router.get("/users", query("filter")
                 return res.send(
                     users.filter((user) => {
                         return user[filter] < value
-                    })
-                )
-            }
+                })
+            )
         }
-    })
+    }
+})
 
 router.get("/users/:id", resolveUsersById, (req, res) => {
     const { foundIndex } = req
@@ -53,16 +53,22 @@ router.get("/users/:id", resolveUsersById, (req, res) => {
     return res.send(data)
 })
 
-router.post('/users', checkSchema(createUserValidationSchema), (req, res) => {
-    const errResult = validationResult(req)
-    console.log(errResult)
-    if (!errResult.isEmpty()) return res.status(404).send({ error: errResult.array() })
+router.post("/users", checkSchema(createUserValidationSchema), async (req, res) => {
+    const result = validationResult(req)
+    if (!result.isEmpty()) return res.send(result.array())
     const data = matchedData(req)
-    const newUser = { id: users[users.length - 1].id + 1, ...data }
-    users.push(newUser)
-    return res.status(201).send(newUser)
+    console.log(data)
+    const { body } = req
+    
+    const newUser = new User(body)
+    try {
+        const savedUser = await newUser.save()
+        return res.status(201).send(newUser)
+    } catch (error) {
+        console.log(`failed to save user ${error}`)
+        return res.status(400)
+    }
 })
-
 
 router.put('/users/:id', resolveUsersById, (req, res) => {
     const { body, foundIndex } = req;
